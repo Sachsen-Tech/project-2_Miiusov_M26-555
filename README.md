@@ -46,3 +46,7 @@ database
 Введите команду: exit
 Выход из программы.
 ```
+
+## Демонстрация работы базы данных
+
+[Ссылка](https://asciinema.org/a/ROVNUY1sVo4mFPdu)
