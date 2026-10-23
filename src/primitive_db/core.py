@@ -2,10 +2,13 @@ import re
 
 from primitive_db.utils import load_table_data
 
+from primitive_db.decorators import handle_db_errors, confirm_action
+
 ALLOWED_TYPES = {"int": int, "str": str, "bool": bool}
 NAME_PATTERN = r"[A-Za-z_][A-Za-z0-9_]*"
 
 
+@handle_db_errors
 def create_table(metadata, table_name, columns):
 
     if not re.fullmatch(NAME_PATTERN, table_name):
@@ -46,6 +49,8 @@ def create_table(metadata, table_name, columns):
     return metadata
 
 
+@handle_db_errors
+@confirm_action("удаление таблицы")
 def drop_table(metadata, table_name):
 
     if table_name not in metadata:
@@ -56,6 +61,7 @@ def drop_table(metadata, table_name):
     return metadata
 
 
+@handle_db_errors
 def insert(metadata, table_name, values, table_data=None):
 
     if table_name not in metadata:
@@ -100,11 +106,13 @@ def _matches(record, where_clause):
     )
 
 
+@handle_db_errors
 def select(table_data, where_clause=None):
 
     return [record for record in table_data if _matches(record, where_clause)]
 
 
+@handle_db_errors
 def update(table_data, set_clause, where_clause):
 
     if not where_clause:
@@ -132,6 +140,8 @@ def update(table_data, set_clause, where_clause):
     return table_data
 
 
+@handle_db_errors
+@confirm_action("удаление записи")
 def delete(table_data, where_clause):
 
     if not where_clause:

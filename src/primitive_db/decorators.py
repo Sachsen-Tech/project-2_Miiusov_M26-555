@@ -1,0 +1,38 @@
+from functools import wraps
+
+
+def handle_db_errors(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except FileNotFoundError:
+            print("Ошибка: файл данных не найден. Возможно, база данных не инициализирована.")
+        except KeyError as error:
+            print(f"Ошибка: таблица или столбец {error} не найден.")
+        except ValueError as error:
+            print(f"Ошибка валидации: {error}")
+        except Exception as error:
+            print(f"Произошла непредвиденная ошибка: {error}")
+
+    return wrapper
+
+
+
+def confirm_action(action_name):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            answer = input(
+                f'Вы уверены, что хотите выполнить "{action_name}"? [y/n]: '
+            ).strip().lower()
+
+            if answer != "y":
+                print("Операция отменена.")
+                return None
+
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
