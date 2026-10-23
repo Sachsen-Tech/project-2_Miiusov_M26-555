@@ -1,3 +1,4 @@
+import time
 from functools import wraps
 
 
@@ -36,3 +37,30 @@ def confirm_action(action_name):
         return wrapper
 
     return decorator
+
+def log_time(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.monotonic()
+
+        try:
+            return func(*args, **kwargs)
+        finally:
+            duration = time.monotonic() - start
+            print(
+                f"Функция {func.__name__} выполнилась за {duration:.3f} секунд."
+            )
+
+    return wrapper
+
+
+def create_cacher():
+    cache = {}
+
+    def cache_result(key, value_func):
+        if key not in cache:
+            cache[key] = value_func()
+
+        return cache[key]
+
+    return cache_result
