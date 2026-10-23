@@ -1,8 +1,12 @@
 import re
 
+from primitive_db.decorators import (
+    confirm_action,
+    create_cacher,
+    handle_db_errors,
+    log_time,
+)
 from primitive_db.utils import load_table_data
-
-from primitive_db.decorators import handle_db_errors, confirm_action, log_time, create_cacher
 
 ALLOWED_TYPES = {"int": int, "str": str, "bool": bool}
 NAME_PATTERN = r"[A-Za-z_][A-Za-z0-9_]*"
@@ -100,14 +104,14 @@ def _matches(record, where_clause):
         return True
 
     return all(
-        key in record
-        and type(record[key]) is type(value)
-        and record[key] == value
+        key in record and type(record[key]) is type(value) and record[key] == value
         for key, value in where_clause.items()
     )
 
 
 _select_cache = create_cacher()
+
+
 @handle_db_errors
 @log_time
 def select(table_data, where_clause=None):
@@ -139,6 +143,8 @@ def update(table_data, set_clause, where_clause):
 
     matched = select(table_data, where_clause)
 
+    if matched is None:
+        return None
 
     for record in matched:
         for column, value in set_clause.items():

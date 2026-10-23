@@ -8,7 +8,7 @@ def handle_db_errors(func):
         try:
             return func(*args, **kwargs)
         except FileNotFoundError:
-            print("Ошибка: файл данных не найден. Возможно, база данных не инициализирована.")
+            print("Ошибка: файл данных не найден.")
         except KeyError as error:
             print(f"Ошибка: таблица или столбец {error} не найден.")
         except ValueError as error:
@@ -19,14 +19,15 @@ def handle_db_errors(func):
     return wrapper
 
 
-
 def confirm_action(action_name):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            answer = input(
-                f'Вы уверены, что хотите выполнить "{action_name}"? [y/n]: '
-            ).strip().lower()
+            answer = (
+                input(f'Вы уверены, что хотите выполнить "{action_name}"? [y/n]: ')
+                .strip()
+                .lower()
+            )
 
             if answer != "y":
                 print("Операция отменена.")
@@ -38,6 +39,7 @@ def confirm_action(action_name):
 
     return decorator
 
+
 def log_time(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -47,9 +49,7 @@ def log_time(func):
             return func(*args, **kwargs)
         finally:
             duration = time.monotonic() - start
-            print(
-                f"Функция {func.__name__} выполнилась за {duration:.3f} секунд."
-            )
+            print(f"Функция {func.__name__} выполнилась за {duration:.3f} секунд.")
 
     return wrapper
 

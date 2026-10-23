@@ -1,4 +1,3 @@
-
 import json
 import re
 
@@ -75,13 +74,13 @@ def split_where(text):
             in_quotes = not in_quotes
             continue
 
-        if not in_quotes and text[i:i + 5].lower() == "where":
+        if not in_quotes and text[i : i + 5].lower() == "where":
             before = text[i - 1] if i else " "
             after = text[i + 5] if i + 5 < len(text) else " "
 
             if before.isspace() and after.isspace():
                 set_part = text[:i].strip()
-                where_part = text[i + 5:].strip()
+                where_part = text[i + 5 :].strip()
 
                 if not set_part or not where_part:
                     raise ValueError("Укажите условия после set и where.")

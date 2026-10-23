@@ -1,4 +1,3 @@
-
 import re
 import shlex
 from pathlib import Path
@@ -116,10 +115,10 @@ def run():
                 table_name = args[1]
                 existed = table_name in metadata
 
-                metadata = create_table(metadata, table_name, args[2:])
+                result = create_table(metadata, table_name, args[2:])
 
-                if not existed and table_name in metadata:
-                    save_metadata(METADATA_FILE, metadata)
+                if result is not None and not existed and table_name in result:
+                    save_metadata(METADATA_FILE, result)
                     save_table_data(table_name, [])
 
             elif command == "drop_table":
@@ -131,10 +130,10 @@ def run():
                 table_name = args[1]
                 existed = table_name in metadata
 
-                metadata = drop_table(metadata, table_name)
+                result = drop_table(metadata, table_name)
 
-                if existed and table_name not in metadata:
-                    save_metadata(METADATA_FILE, metadata)
+                if result is not None and existed and table_name not in result:
+                    save_metadata(METADATA_FILE, result)
                     (Path("data") / f"{table_name}.json").unlink(missing_ok=True)
 
             elif command == "list_tables":
@@ -167,11 +166,15 @@ def run():
                 values = parse_values(values_text)
                 table_data = load_table_data(table_name)
 
-                table_data = insert(metadata, table_name, values, table_data)
-                save_table_data(table_name, table_data)
+                result = insert(metadata, table_name, values, table_data)
+
+                if result is None:
+                    continue
+
+                save_table_data(table_name, result)
 
                 print(
-                    f'Запись с ID={table_data[-1]["ID"]} '
+                    f"Запись с ID={result[-1]['ID']} "
                     f'успешно добавлена в таблицу "{table_name}".'
                 )
 
@@ -194,7 +197,10 @@ def run():
                     validate_clause(schema, where_clause)
 
                 table_data = load_table_data(table_name)
-                print_records(schema, select(table_data, where_clause))
+                records = select(table_data, where_clause)
+
+                if records is not None:
+                    print_records(schema, records)
 
             elif command == "update":
                 match = re.fullmatch(
@@ -218,19 +224,25 @@ def run():
                 validate_clause(schema, set_clause)
                 validate_clause(schema, where_clause)
 
-                table_data = load_table_data(table_name)
                 affected = select(table_data, where_clause)
+
+                if affected is None:
+                    continue
 
                 if not affected:
                     print("Записи не найдены.")
                     continue
 
-                table_data = update(table_data, set_clause, where_clause)
-                save_table_data(table_name, table_data)
+                result = update(table_data, set_clause, where_clause)
+
+                if result is None:
+                    continue
+
+                save_table_data(table_name, result)
 
                 for record in affected:
                     print(
-                        f'Запись с ID={record["ID"]} в таблице '
+                        f"Запись с ID={record['ID']} в таблице "
                         f'"{table_name}" успешно обновлена.'
                     )
 
@@ -253,16 +265,23 @@ def run():
                 table_data = load_table_data(table_name)
                 affected = select(table_data, where_clause)
 
+                if affected is None:
+                    continue
+
                 if not affected:
                     print("Записи не найдены.")
                     continue
 
-                table_data = delete(table_data, where_clause)
-                save_table_data(table_name, table_data)
+                result = delete(table_data, where_clause)
+
+                if result is None:
+                    continue
+
+                save_table_data(table_name, result)
 
                 for record in affected:
                     print(
-                        f'Запись с ID={record["ID"]} успешно удалена '
+                        f"Запись с ID={record['ID']} успешно удалена "
                         f'из таблицы "{table_name}".'
                     )
 
@@ -280,9 +299,7 @@ def run():
 
                 print(f"Таблица: {table_name}")
 
-                columns = ", ".join(
-                    f"{name}:{kind}" for name, kind in schema.items()
-                )
+                columns = ", ".join(f"{name}:{kind}" for name, kind in schema.items())
 
                 print(f"Столбцы: {columns}")
                 print(f"Количество записей: {len(table_data)}")
@@ -292,4 +309,3 @@ def run():
 
         except (ValueError, OSError) as error:
             print(f"Ошибка: {error}")
-  
