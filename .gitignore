@@ -1,6 +1,12 @@
- .venv
- dist/
- __pycache__/
- *.egg-info
- recordings/
- 
+.venv/
+dist/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ruff_cache/
+
+db_meta.json
+data/
+
+recordings/
+*.cast
