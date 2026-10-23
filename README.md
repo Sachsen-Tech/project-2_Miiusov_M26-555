@@ -47,6 +47,68 @@ database
 Выход из программы.
 ```
 
+## CRUD. Доступные команды
+
+1. insert into <таблица> values (<значения>) -> Добавление записи
+2. select from <таблица> -> Получение всех записей
+3. select from <таблица> where <условие> -> Получение записей по условию
+4. update <таблица> set <изменение> where <условие> -> Изменение записей
+5. delete from <таблица> where <условие> -> Удаление записей
+6. info <таблица> -> Информация о таблице
+7. help -> Справочная информация
+8. exit -> Завершение работы
+
+## Примеры использования
+
+Запуск программы:
+
+```bash
+database
+```
+
+Создание таблицы:
+
+```bash
+create_table users name:str age:int is_active:bool
+```
+
+Добавление записи:
+
+```bash
+insert into users values ("Sergei", 28, true)
+```
+
+Получение всех записей:
+
+```bash
+select from users
+```
+
+Поиск по условию:
+
+```bash
+select from users where age = 28
+```
+
+Обновление записи:
+
+```bash
+update users set age = 29 where name = "Sergei"
+```
+
+Удаление записи:
+
+```bash
+delete from users where ID = 1
+```
+
+Вывод информации о таблице:
+
+```bash
+info users
+```
+
 ## Демонстрация работы базы данных
 
-[Ссылка](https://asciinema.org/a/ROVNUY1sVo4mFPdu)
+[Ссылка. Проверка этапа "База данных"](https://asciinema.org/a/ROVNUY1sVo4mFPdu)
+[Ссылка. Проверка этапа "Адаптируем модуль "База данных""](https://asciinema.org/a/M6XBYNcFSP5csh32)
