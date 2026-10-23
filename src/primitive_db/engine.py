@@ -1,10 +1,15 @@
 import re
 import shlex
-from pathlib import Path
 
 import prompt
 from prettytable import PrettyTable
 
+from primitive_db.constants import (
+    ALLOWED_TYPES,
+    DATA_DIR,
+    METADATA_FILE,
+    NAME_PATTERN,
+)
 from primitive_db.core import create_table, delete, drop_table, insert, select, update
 from primitive_db.parser import (
     parse_set_clause,
@@ -19,12 +24,10 @@ from primitive_db.utils import (
     save_table_data,
 )
 
-TABLE_NAME = r"[A-Za-z_][A-Za-z0-9_]*"
-METADATA_FILE = "db_meta.json"
-TYPE_MAP = {"int": int, "str": str, "bool": bool}
-
 
 def print_help():
+    """Выводит справку по доступным командам базы данных."""
+
     print("\n***Операции с данными***\n")
     print("Функции:")
     print(
@@ -55,6 +58,8 @@ def print_help():
 
 
 def require_table(metadata, table_name):
+    """Проверяет существование таблицы и возвращает её структуру."""
+
     if table_name not in metadata:
         raise ValueError(f"Таблица '{table_name}' не существует.")
 
@@ -62,15 +67,19 @@ def require_table(metadata, table_name):
 
 
 def validate_clause(schema, clause):
+    """Проверяет существование столбцов и соответствие типов значений."""
+
     for column, value in clause.items():
         if column not in schema:
             raise ValueError(f"Столбец '{column}' не существует.")
 
-        if type(value) is not TYPE_MAP[schema[column]]:
+        if type(value) is not ALLOWED_TYPES[schema[column]]:
             raise ValueError(f"Некорректный тип для столбца '{column}'.")
 
 
 def print_records(schema, records):
+    """Выводит записи базы данных в виде форматированной таблицы."""
+
     table = PrettyTable()
     table.field_names = list(schema)
 
@@ -81,6 +90,8 @@ def print_records(schema, records):
 
 
 def run():
+    """Запускает консольный интерфейс и обрабатывает команды пользователя."""
+
     print_help()
 
     while True:
@@ -109,7 +120,7 @@ def run():
             elif command == "create_table":
                 args = shlex.split(user_input)
 
-                if len(args) < 3 or not re.fullmatch(TABLE_NAME, args[1]):
+                if len(args) < 3 or not re.fullmatch(NAME_PATTERN, args[1]):
                     raise ValueError("Формат: create_table имя столбец:тип")
 
                 table_name = args[1]
@@ -124,7 +135,7 @@ def run():
             elif command == "drop_table":
                 args = shlex.split(user_input)
 
-                if len(args) != 2 or not re.fullmatch(TABLE_NAME, args[1]):
+                if len(args) != 2 or not re.fullmatch(NAME_PATTERN, args[1]):
                     raise ValueError("Формат: drop_table имя_таблицы")
 
                 table_name = args[1]
@@ -134,7 +145,7 @@ def run():
 
                 if result is not None and existed and table_name not in result:
                     save_metadata(METADATA_FILE, result)
-                    (Path("data") / f"{table_name}.json").unlink(missing_ok=True)
+                    (DATA_DIR / f"{table_name}.json").unlink(missing_ok=True)
 
             elif command == "list_tables":
                 if user_input.lower() != "list_tables":
@@ -150,7 +161,7 @@ def run():
 
             elif command == "insert":
                 match = re.fullmatch(
-                    rf"insert\s+into\s+({TABLE_NAME})\s+values\s*\((.*)\)",
+                    rf"insert\s+into\s+({NAME_PATTERN})\s+values\s*\((.*)\)",
                     user_input,
                     re.IGNORECASE | re.DOTALL,
                 )
@@ -180,7 +191,7 @@ def run():
 
             elif command == "select":
                 match = re.fullmatch(
-                    rf"select\s+from\s+({TABLE_NAME})(?:\s+where\s+(.+))?",
+                    rf"select\s+from\s+({NAME_PATTERN})(?:\s+where\s+(.+))?",
                     user_input,
                     re.IGNORECASE | re.DOTALL,
                 )
@@ -204,7 +215,7 @@ def run():
 
             elif command == "update":
                 match = re.fullmatch(
-                    rf"update\s+({TABLE_NAME})\s+set\s+(.+)",
+                    rf"update\s+({NAME_PATTERN})\s+set\s+(.+)",
                     user_input,
                     re.IGNORECASE | re.DOTALL,
                 )
@@ -224,6 +235,7 @@ def run():
                 validate_clause(schema, set_clause)
                 validate_clause(schema, where_clause)
 
+                table_data = load_table_data(table_name)
                 affected = select(table_data, where_clause)
 
                 if affected is None:
@@ -248,7 +260,7 @@ def run():
 
             elif command == "delete":
                 match = re.fullmatch(
-                    rf"delete\s+from\s+({TABLE_NAME})\s+where\s+(.+)",
+                    rf"delete\s+from\s+({NAME_PATTERN})\s+where\s+(.+)",
                     user_input,
                     re.IGNORECASE | re.DOTALL,
                 )
@@ -287,7 +299,7 @@ def run():
 
             elif command == "info":
                 match = re.fullmatch(
-                    rf"info\s+({TABLE_NAME})", user_input, re.IGNORECASE
+                    rf"info\s+({NAME_PATTERN})", user_input, re.IGNORECASE
                 )
 
                 if match is None:

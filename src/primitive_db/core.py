@@ -1,5 +1,6 @@
 import re
 
+from primitive_db.constants import ALLOWED_TYPES, NAME_PATTERN
 from primitive_db.decorators import (
     confirm_action,
     create_cacher,
@@ -8,12 +9,10 @@ from primitive_db.decorators import (
 )
 from primitive_db.utils import load_table_data
 
-ALLOWED_TYPES = {"int": int, "str": str, "bool": bool}
-NAME_PATTERN = r"[A-Za-z_][A-Za-z0-9_]*"
-
 
 @handle_db_errors
 def create_table(metadata, table_name, columns):
+    """Создаёт таблицу с указанными столбцами и проверяет их корректность."""
 
     if not re.fullmatch(NAME_PATTERN, table_name):
         raise ValueError("Некорректное имя таблицы.")
@@ -56,6 +55,7 @@ def create_table(metadata, table_name, columns):
 @handle_db_errors
 @confirm_action("удаление таблицы")
 def drop_table(metadata, table_name):
+    """Удаляет таблицу из метаданных базы данных."""
 
     if table_name not in metadata:
         raise ValueError(f"Таблица '{table_name}' не существует.")
@@ -68,6 +68,7 @@ def drop_table(metadata, table_name):
 @handle_db_errors
 @log_time
 def insert(metadata, table_name, values, table_data=None):
+    """Проверяет значения и добавляет новую запись с автоматически созданным ID."""
 
     if table_name not in metadata:
         raise ValueError(f"Таблица '{table_name}' не существует.")
@@ -99,6 +100,7 @@ def insert(metadata, table_name, values, table_data=None):
 
 
 def _matches(record, where_clause):
+    """Проверяет соответствие записи условиям фильтрации."""
 
     if where_clause is None:
         return True
@@ -115,6 +117,8 @@ _select_cache = create_cacher()
 @handle_db_errors
 @log_time
 def select(table_data, where_clause=None):
+    """Выбирает записи по условию с использованием кэширования."""
+
     key = (repr(table_data), repr(where_clause))
 
     indexes = _select_cache(
@@ -131,6 +135,7 @@ def select(table_data, where_clause=None):
 
 @handle_db_errors
 def update(table_data, set_clause, where_clause):
+    """Обновляет значения столбцов у записей, соответствующих условию."""
 
     if not where_clause:
         raise ValueError("Для обновления требуется условие where.")
@@ -162,6 +167,7 @@ def update(table_data, set_clause, where_clause):
 @handle_db_errors
 @confirm_action("удаление записи")
 def delete(table_data, where_clause):
+    """Возвращает список записей без элементов, соответствующих условию удаления."""
 
     if not where_clause:
         raise ValueError("Для удаления требуется условие where.")

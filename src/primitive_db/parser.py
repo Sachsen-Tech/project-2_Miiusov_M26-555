@@ -1,11 +1,12 @@
 import json
 import re
 
-ALLOWED_TYPES = (int, str, bool)
-_FIELD_PATTERN = r"[A-Za-z_][A-Za-z0-9_]*"
+from primitive_db.constants import NAME_PATTERN, VALUE_TYPES
 
 
 def parse_value(text):
+    """Преобразует текстовое значение в поддерживаемый тип Python."""
+
     try:
         value = json.loads(text.strip())
     except json.JSONDecodeError as exc:
@@ -14,13 +15,15 @@ def parse_value(text):
             "логические значения — true/false."
         ) from exc
 
-    if type(value) not in ALLOWED_TYPES:
+    if type(value) not in VALUE_TYPES:
         raise ValueError("Допустимые типы значений: int, str, bool.")
 
     return value
 
 
 def parse_values(text):
+    """Разбирает список значений для добавления записи в таблицу."""
+
     try:
         values = json.loads(f"[{text}]")
     except json.JSONDecodeError as exc:
@@ -28,15 +31,17 @@ def parse_values(text):
             'Некорректный список значений. Например: ("Sergei", 28, true).'
         ) from exc
 
-    if any(type(value) not in ALLOWED_TYPES for value in values):
+    if any(type(value) not in VALUE_TYPES for value in values):
         raise ValueError("Допустимые типы значений: int, str, bool.")
 
     return values
 
 
 def _parse_assignment(text):
+    """Разбирает выражение вида столбец = значение."""
+
     match = re.fullmatch(
-        rf"({_FIELD_PATTERN})\s*=\s*(.+)",
+        rf"({NAME_PATTERN})\s*=\s*(.+)",
         text.strip(),
         re.DOTALL,
     )
@@ -49,15 +54,20 @@ def _parse_assignment(text):
 
 
 def parse_where_clause(text):
+    """Преобразует условие WHERE в словарь."""
+
     return _parse_assignment(text)
 
 
 def parse_set_clause(text):
+    """Преобразует выражение SET в словарь."""
+
     return _parse_assignment(text)
 
 
 def split_where(text):
     """Разделяет SET и WHERE, не затрагивая строки в кавычках."""
+
     in_quotes = False
     escaped = False
 

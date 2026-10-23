@@ -1,5 +1,6 @@
 [project]
 name = "primitive-db"
+description = "Проект по работе с базой данных"
 version = "0.1.0"
 readme = "README.md"
 authors = [
