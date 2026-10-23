@@ -1,8 +1,0 @@
-{
-    "crud_demo": {
-        "ID": "int",
-        "name": "str",
-        "age": "int",
-        "is_active": "bool"
-    }
-}
